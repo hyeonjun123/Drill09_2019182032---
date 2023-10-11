@@ -1,8 +1,9 @@
 # 이것은 각 상태들을 객체로 구현한 것임.
 
-from pico2d import load_image,SDL_KEYDOWN, SDLK_SPACE, get_time,SDLK_RIGHT,SDL_KEYUP, SDLK_LEFT
+from pico2d import load_image,SDL_KEYDOWN, SDLK_SPACE, \
+    get_time,SDLK_RIGHT,SDL_KEYUP, SDLK_LEFT,SDLK_a
 
-
+import time
 import math
 
 
@@ -12,7 +13,8 @@ def space_down(e):
 
 def time_out(e):
     return e[0] == 'TIME_OUT'
-
+def Auto_Run(e):
+    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key ==SDLK_a
 
 def right_down(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_RIGHT
@@ -25,6 +27,48 @@ def left_up(e):
 
 
 
+class AutoRun:
+    @staticmethod
+    def enter(boy, e):
+        if Auto_Run(e):
+            boy.dir, boy.action = 1, 1
+            boy.speed = 10  # Increase the speed
+            boy.scale = 2  # Enlarge the size
+            boy.auto_run_start_time = time.time()
+    @staticmethod
+    def exit(boy, e):
+        boy.speed = 5
+        boy.scale = 1
+        pass
+
+    @staticmethod
+
+
+    def do(boy):
+        boy.frame = (boy.frame + 1) % 8
+
+        if 400 <= boy.x <= 800:
+            boy.x += boy.dir * 10
+
+        elif 0 <= boy.x < 400:
+            boy.x += boy.dir * 10
+
+        if boy.x == 800:
+            boy.dir = -1  # Change direction to move left when reaching 800
+
+        elif boy.x == 0:
+            boy.dir = 1
+
+            # if boy.auto_run_start_time is not None:
+        #     # Check if 5 seconds have passed
+        #     if time.time() - boy.auto_run_start_time >= 5:
+        #         boy.change_state(Idle)  # Switch back to idle state
+
+    @staticmethod
+    def draw(boy):
+        boy.image.clip_draw(boy.frame * 100, boy.action * 100, 100, 100, boy.x, boy.y+30 ,200,200)
+
+
 class Run:
     @staticmethod
     def enter(boy, e):
@@ -32,7 +76,6 @@ class Run:
             boy.dir, boy.action = 1, 1
         elif left_down(e) or right_up(e):
             boy.dir, boy.action = -1, 0
-
     @staticmethod
     def exit(boy,e):
         pass
@@ -111,17 +154,18 @@ class StateMachine:
         self.cur_state = Idle
 
         self.transitions = {
-            Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run, time_out: Sleep},
+            Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run, time_out: Sleep, Auto_Run: AutoRun},
             Run: {right_down: Idle, left_down: Idle, right_up: Idle, left_up: Idle},
-            Sleep: {right_down: Run, left_down: Run, right_up: Run, left_up: Run, space_down: Idle}
+            Sleep: {right_down: Run, left_down: Run, right_up: Run, left_up: Run, space_down: Idle},
+            AutoRun: {right_down: AutoRun, left_down: AutoRun, right_up: AutoRun, left_up: AutoRun, space_down: AutoRun}
         }
 
     def handle_event(self, e):
         for check_event, next_state in self.transitions[self.cur_state].items(): #self.tran~딕셔너리에 있는 key가 cur_state인 슬립안에있는 아템들을 출력하라
             if check_event(e):
-                self.cur_state.exit(self.boy,e)#상태바뀌기전에 sleep exit하고
+                self.cur_state.exit(self.boy, e)#상태바뀌기전에 sleep exit하고
                 self.cur_state = next_state #다음 상태로
-                self.cur_state.enter(self.boy,e) #들어왔을 경우 entery 액션을 실행해주면된다.
+                self.cur_state.enter(self.boy, e) #들어왔을 경우 entery 액션을 실행해주면된다.
                 return True
         return False
 
@@ -146,6 +190,9 @@ class Boy:
         self.image = load_image('animation_sheet.png')
         self.state_machine = StateMachine(self) #여기서의 self는 boy이다. boy를 넘겨주는것임
         self.state_machine.start()
+        self.speed = 5  # 'speed' 속성을 추가
+        self.scale = 1
+
 
     def update(self):
         self.state_machine.update()
