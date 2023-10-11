@@ -32,7 +32,7 @@ class AutoRun:
     @staticmethod
     def enter(boy, e):
         if Auto_Run(e):
-            boy.dir, boy.action = 1, 1
+            boy.dirr_2, boy.action = 1, 1
             boy.speed = 10  # Increase the speed
             boy.scale = 2  # Enlarge the size
             boy.auto_run_start_time = time.time()
@@ -43,22 +43,19 @@ class AutoRun:
         pass
 
     @staticmethod
-
-
     def do(boy):
         boy.frame = (boy.frame + 1) % 8
 
         if 400 <= boy.x <= 800:
-            boy.x += boy.dir * 10
-
+            boy.x += boy.dirr_2 * 10
         elif 0 <= boy.x < 400:
-            boy.x += boy.dir * 10
+            boy.x += boy.dirr_2 * 10
 
         if boy.x == 800:
-            boy.dir = -1  # Change direction to move left when reaching 800
+            boy.dirr_2 = -1
 
         elif boy.x == 0:
-            boy.dir = 1
+            boy.dirr_2 = 1
 
         if boy.auto_run_start_time is not None:
             # Check if 5 seconds have passed
@@ -158,7 +155,8 @@ class StateMachine:
             Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run, time_out: Sleep, Auto_Run: AutoRun},
             Run: {right_down: Idle, left_down: Idle, right_up: Idle, left_up: Idle},
             Sleep: {right_down: Run, left_down: Run, right_up: Run, left_up: Run, space_down: Idle},
-            AutoRun: {right_down: AutoRun, left_down: AutoRun, right_up: AutoRun, left_up: AutoRun, space_down: AutoRun, time_out: Idle}
+            #AutoRun: {right_down: AutoRun, left_down:AutoRun , right_up: AutoRun, left_up:AutoRun, space_down: AutoRun, time_out: Idle}
+            AutoRun: {right_down: Run, left_down: Run, right_up: Run, left_up: Run, space_down: AutoRun, time_out: Idle,Auto_Run: Idle}
         }
 
     def handle_event(self, e):
