@@ -13,6 +13,7 @@ def space_down(e):
 
 def time_out(e):
     return e[0] == 'TIME_OUT'
+
 def Auto_Run(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key ==SDLK_a
 
@@ -59,10 +60,10 @@ class AutoRun:
         elif boy.x == 0:
             boy.dir = 1
 
-            # if boy.auto_run_start_time is not None:
-        #     # Check if 5 seconds have passed
-        #     if time.time() - boy.auto_run_start_time >= 5:
-        #         boy.change_state(Idle)  # Switch back to idle state
+        if boy.auto_run_start_time is not None:
+            # Check if 5 seconds have passed
+            if time.time() - boy.auto_run_start_time >= 5:
+                boy.state_machine.handle_event(('TIME_OUT', 0)) # idle상태로 바꿔줘
 
     @staticmethod
     def draw(boy):
@@ -157,7 +158,7 @@ class StateMachine:
             Idle: {right_down: Run, left_down: Run, left_up: Run, right_up: Run, time_out: Sleep, Auto_Run: AutoRun},
             Run: {right_down: Idle, left_down: Idle, right_up: Idle, left_up: Idle},
             Sleep: {right_down: Run, left_down: Run, right_up: Run, left_up: Run, space_down: Idle},
-            AutoRun: {right_down: AutoRun, left_down: AutoRun, right_up: AutoRun, left_up: AutoRun, space_down: AutoRun}
+            AutoRun: {right_down: AutoRun, left_down: AutoRun, right_up: AutoRun, left_up: AutoRun, space_down: AutoRun, time_out: Idle}
         }
 
     def handle_event(self, e):
